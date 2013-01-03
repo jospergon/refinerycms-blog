@@ -15,6 +15,7 @@ module Refinery
       alias_attribute :message, :body
 
       validates :name, :message, :presence => true
+      validates :message, :length => {:maximum => 500}
       validates :email, :format => { :with => /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i }
 
       class << self
@@ -33,12 +34,19 @@ module Refinery
 
       self.per_page = Refinery::Blog.comments_per_page
 
+      def avatar_url(options = {})
+        options = {:size => 60}
+        require 'digest/md5'
+        size = ("?s=#{options[:size]}" if options[:size])
+        "http://gravatar.com/avatar/#{Digest::MD5.hexdigest(self.email.to_s.strip.downcase)}#{size}.jpg"
+      end
+
       def approve!
-        self.update_column(:state, 'approved')
+        self.update_attribute(:state, 'approved')
       end
 
       def reject!
-        self.update_column(:state, 'rejected')
+        self.update_attribute(:state, 'rejected')
       end
 
       def rejected?
