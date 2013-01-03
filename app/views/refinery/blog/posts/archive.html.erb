@@ -1,17 +1,19 @@
-<% content_for :title, "#{t('.blog_archive_for', :date => @archive_date.strftime('%B %Y'))}" %>
-
-<% content_for :body do %>
-  <h1><%= t('.blog_archive_for', :date => @archive_date.strftime('%B %Y')) %></h1>
+<% content_for :side_body do %>
   <% if @posts.any? %>
-    <section id="blog_posts">
-      <%= render :partial => "/refinery/blog/shared/post", :collection => @posts %>
+    <section id="blog_posts" class="row">
+      <section class="eight columns">
+        <h1><%= t('.blog_archive_for', :date => l(@archive_date, :format => "%B %Y")) %></h1>
+        <% content_for :title, "#{t('.blog_archive_for', :date => @archive_date.strftime('%B %Y'))}" %>
+        <%= render :partial => "/refinery/blog/shared/post", :collection => @posts %>
+      </section>
+      <aside class="four columns">
+        <%= render :partial => '/refinery/blog/shared/body_content_right' %>
+      </aside>
     </section>
   <% else %>
     <p><%= t('.no_blog_articles_posted', :date => @archive_date.strftime('%B %Y')) %></p>
   <% end %>
 <% end %>
 
-<%= render '/refinery/blog/shared/body_content_right' %>
-
-<%= render "/refinery/content_page" %>
+<%= render :partial => "/refinery/content_page" %>
 <% content_for :stylesheets, stylesheet_link_tag('refinery/blog/frontend') %>

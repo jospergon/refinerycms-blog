@@ -6,11 +6,22 @@
 <article id="blog_post">
   <header>
     <h1><%= @post.title %></h1>
+    <%= render :partial => "/refinery/social_buttons", :locals => {
+      :hastag => "tarot,blog",
+      :text => "#{@post.title}"
+    } %>
     <section class='details'>
-      <time datetime="<%=l @post.published_at.to_date, :format => :default %>" class='posted_at'>
-        <%= t('created_at', :scope => 'refinery.blog.shared.posts', :when => l(@post.published_at.to_date, :format => :short)) %>
-      </time>
-      <%= content_tag(:div, "#{t('by', :scope => 'refinery.blog.posts.show')} #{@post.author.username}", :class => "blog_author") if @post.author.present? %>
+      <div>
+        <time datetime="<%=l @post.published_at.to_date, :format => :default %>" class='posted_at'>
+          <%= t('created_at', :scope => 'refinery.blog.shared.posts') %>
+          <span class="blog_date"><%= l(@post.published_at.to_date, :format => :default) %></span>
+        </time>
+      </div>
+      <% if @post.author.present? %>
+        <div>
+          <%= t('by', :scope => 'refinery.blog.posts.show') %> <span class="blog_author"><%= @post.author.username.capitalize %></span>
+        </div>
+      <% end %>
       <% if @post.source_url.present? %>
         <div class='blog_source'>
           <%= "#{t('source', :scope => 'refinery.blog.posts.show')}: " %>
@@ -29,9 +40,17 @@
   </header>
   <%= @post.body.html_safe %>
 
+  <!-- social buttons -->
+  <%= render :partial => "/refinery/social_buttons", :locals => {
+      :hastag => "tarot,blog",
+      :text => "#{@post.title}",
+      :show_share_text => true
+  } %>
+  <!-- end social buttons -->
+
   <% if Refinery::Blog::Post::ShareThis.enabled? %>
     <span class="st_sharethis" displayText="ShareThis"></span>
   <% end %>
 </article>
-<%= render '/refinery/draft_page_message' unless @post.nil? or @post.live? -%>
+<%= render :partial => '/refinery/draft_page_message' unless @post.nil? or @post.live? -%>
 <%= render 'nav' if next_or_previous?(@post) %>

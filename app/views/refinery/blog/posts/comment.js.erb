@@ -1,0 +1,8 @@
+<% if @moderation %>
+  $("#comment_form").html("<%= escape_javascript(render :partial => 'comment_form') %>");
+<% else %>
+  $("#comment_list").html("<%= escape_javascript(render :partial => "comments") %>");
+<% end %>
+
+var toggleLoading = function() { $("#ajax_loader").show() };
+$("#new_comment").bind("ajaxSend", toggleLoading);

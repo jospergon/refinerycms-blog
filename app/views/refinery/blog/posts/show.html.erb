@@ -1,19 +1,28 @@
-<% content_for :body do %>
-  <div id="show_blog_post">
-    <%= render 'post' %>
-  </div>
+<% content_for :side_body do %>
+  <section id="show_blog_post" class="row">
+    <section class="eight columns">
+      <%= render 'post' %>
+    </section>
+    <aside class="four columns">
+      <%= render :partial => '/refinery/blog/shared/body_content_right' %>
+    </aside>
+  </section>
+  <section class="row">
+    <section class="eight columns" id="comment_list">
+      <% if Refinery::Blog::Post.comments_allowed? %>
+        <%= render 'comments'%>
+      <% end %>
+    </section>
+  </section>
 
-  <%= render 'comments' %>
 <% end %>
 
-<%= render '/refinery/blog/shared/body_content_right' %>
-
-<%= render "/refinery/content_page", :remove_automatic_sections => true %>
+<%#= render :partial => "/refinery/content_page", :locals => { :remove_automatic_sections => true }  %>
 
 <% content_for :stylesheets, stylesheet_link_tag('refinery/blog/frontend') %>
 <% content_for :javascripts do %>
   <%# enable AJAX'd post nav at your own risk until html5 history API implemented. %>
   <%#= javascript_include_tag('refinery/blog/frontend') %>
   <script src="http://w.sharethis.com/button/buttons.js"></script>
-  <script>stLight.options({publisher:'<%= Refinery::Blog.share_this_key %>'});</script>
+  <script>stLight.options({publisher:'<%= Blog::Post::ShareThis.key %>'});</script>
 <% end if Refinery::Blog::Post::ShareThis.enabled? %>
