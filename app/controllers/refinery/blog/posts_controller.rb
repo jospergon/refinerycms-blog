@@ -2,6 +2,8 @@ module Refinery
   module Blog
     class PostsController < BlogController
 
+      caches_page :index, :unless => proc {|c| c.refinery_user_signed_in? || c.flash.any? || params[:page].present? }
+
       before_filter :find_all_blog_posts, :except => [:archive]
       before_filter :find_blog_post, :only => [:show, :comment, :update_nav]
       before_filter :find_tags
@@ -10,17 +12,17 @@ module Refinery
 
       def index
         # Rss feeders are greedy. Let's give them every blog post instead of paginating.
-        (@posts = Post.live.includes(:comments, :categories)) if request.format.rss?
+        (@posts = Post.live.includes(:comments, :categories).all) if request.format.rss?
         respond_with (@posts) do |format|
           format.html
-          format.rss { render :layout => false }
+          format.rss
         end
       end
 
       def show
         @comment = Comment.new
 
-        @canonical = refinery.url_for(:locale => Refinery::I18n.current_frontend_locale) if canonical?
+        @canonical = url_for(:locale => ::Refinery::I18n.default_frontend_locale) if canonical?
 
         @post.increment!(:access_count, 1)
 
@@ -31,6 +33,7 @@ module Refinery
       end
 
       def comment
+        @moderation = false
         if (@comment = @post.comments.create(params[:comment])).valid?
           if Comment::Moderation.enabled? or @comment.ham?
             begin
@@ -40,16 +43,14 @@ module Refinery
             end
           end
 
+          @comment = Comment.new
+
           if Comment::Moderation.enabled?
-            flash[:notice] = t('thank_you_moderated', :scope => 'refinery.blog.posts.comments')
-            redirect_to refinery.blog_post_url(params[:id])
+            @moderation = true
+            flash.now[:notice] = t('thank_you_moderated', :scope => 'refinery.blog.posts.comments')
           else
-            flash[:notice] = t('thank_you', :scope => 'refinery.blog.posts.comments')
-            redirect_to refinery.blog_post_url(params[:id],
-                                      :anchor => "comment-#{@comment.to_param}")
+            flash.now[:notice] = t('thank_you', :scope => 'refinery.blog.posts.comments')
           end
-        else
-          render :show
         end
       end
 
@@ -58,7 +59,7 @@ module Refinery
           date = "#{params[:month]}/#{params[:year]}"
           @archive_date = Time.parse(date)
           @date_title = @archive_date.strftime('%B %Y')
-          @posts = Post.live.by_month(@archive_date).page(params[:page])
+          @posts = Post.live.by_archive(@archive_date).page(params[:page])
         else
           date = "01/#{params[:year]}"
           @archive_date = Time.parse(date)
@@ -71,12 +72,11 @@ module Refinery
       def tagged
         @tag = ActsAsTaggableOn::Tag.find(params[:tag_id])
         @tag_name = @tag.name
-        @posts = Post.live.tagged_with(@tag_name).page(params[:page])
+        @posts = Post.tagged_with(@tag_name).page(params[:page])
       end
 
-    protected
       def canonical?
-        Refinery::I18n.default_frontend_locale != Refinery::I18n.current_frontend_locale
+        ::Refinery.i18n_enabled? && ::Refinery::I18n.default_frontend_locale != ::Refinery::I18n.current_frontend_locale
       end
     end
   end
